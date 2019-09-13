@@ -301,7 +301,7 @@ C.M.@hit    2019.09.09
    > void APPCTRL_angCtrl(void)
    > {
    >  extern int16_t drvimu_rawAx, drvimu_rawAy, drvimu_rawAz;
-   >  DRVIMU_GetAcceData()；
+   >  DRVIMU_GetAcceData();
    >  //use these varibles directly here.
    >  //...
    > }
@@ -341,7 +341,7 @@ C.M.@hit    2019.09.09
    > void APPCTRL_angCtrl(void)
    > {
    >  
-   >  DRVIMU_GetAcceData(appctrl_rawAx, appctrl_rawAy, appctrl_rawAz)；
+   >  DRVIMU_GetAcceData(appctrl_rawAx, appctrl_rawAy, appctrl_rawAz);
    >  //...
    > }
    > //ohter code...
@@ -504,6 +504,37 @@ C.M.@hit    2019.09.09
    > ```c++
    > int sw = 0;
    > 
+   > // some code to change sw value...
+   > 
+   > if(sw < 10)
+   > {
+   >     printf("SW < 10\n");
+   > }
+   > else if (sw < 20)
+   > {
+   >     printf("10 <= SW < 20\n");
+   > }
+   > else
+   > {
+   >     printf("Error!\n");
+   > }
+   > 
+   > 
+   > switch(sw)
+   > {
+   >     case 0:
+   >         printf("sw = 0\n");
+   >         break;
+   >     case 1:
+   >         printf("sw = 1\n");
+   >         break;
+   >     case 2:
+   >         printf("sw = 2\n");
+   >         break;
+   >     default:
+   >         printf("sw Out of Range!\n");
+   >         break;
+   > }
    > 
    > ```
    >
