@@ -155,7 +155,7 @@ C.M.@hit    2019.09.09
    > ```C++
    > #include "rte_common.hpp"		//Runtime Environment Layer, common
    > #include "drv_pitmgr.hpp"		//System Driver Layer, PIT Manager
-   > #include "drv_lcd_st7789.hpp"	//System Driver Layer, LCD Driver, Model "ST7789"
+   > #include "drv_disp_st7789.hpp"	//System Driver Layer, Display Driver, Model "ST7789"
    > #include "app_ctrl.hpp"			//Application Layer, Controll
    > ```
    >
