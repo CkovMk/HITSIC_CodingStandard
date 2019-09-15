@@ -920,7 +920,7 @@ C.M.@hit    2019.09.09
 > 注意：**原则上C++用作接口类的基类必须是纯虚基类，不按规定编写可能产生难以预期的后果。**
 >
 > ```c++
-> //UI Menu menuItem interface
+> 	//UI Menu menuItem interface
 > 	class menuItemIfce_t
 > 	{
 > 	public:
