@@ -920,47 +920,46 @@ C.M.@hit    2019.09.09
 > 注意：**原则上C++用作接口类的基类必须是纯虚基类，不按规定编写可能产生难以预期的后果。**
 >
 > ```c++
-> 	//UI Menu menuItem interface
-> 	class menuItemIfce_t
+> //UI Menu menuItem interface
+> class menuItemIfce_t
+> {
+> public:
+> 	enum type_t : uint8_t
 > 	{
-> 	public:
-> 		enum type_t : uint8_t
-> 		{
-> 			nullType,
-> 			variType,
-> 			varfType,
-> 			procType,
-> 			menuType,
-> 		};
-> 		enum message_t : uint32_t
-> 		{
-> 			selected,
-> 			deselected,
-> 			dataUpdate,
-> 		};
-> 		enum propety_t : uint32_t
-> 		{
-> 			//data config
-> 			data_global = 1 << 0,	//data save in global area
-> 			data_region = 1 << 1,	//data save in regional area
-> 			data_getPos = data_global | data_region,
-> 			data_ROFlag = 1 << 2,	//data read only
-> 			data_prioRW = 1 << 3,	//data rw prior than other item
-> 			data_getCfg = data_global | data_region | data_ROFlag | data_prioRW,
+> 		nullType,
+> 		variType,
+> 		varfType,
+> 		procType,
+> 		menuType,
+> 	};
+> 	enum message_t : uint32_t
+> 	{
+> 		selected,
+> 		deselected,
+> 		dataUpdate,
+> 	};
+> 	enum propety_t : uint32_t
+> 	{
+> 		//data config
+> 		data_global = 1 << 0,	//data save in global area
+> 		data_region = 1 << 1,	//data save in regional area
+> 		data_getPos = data_global | data_region,
+> 		data_ROFlag = 1 << 2,	//data read only
+> 		data_prioRW = 1 << 3,	//data rw prior than other item
+> 		data_getCfg = data_global | data_region | data_ROFlag | data_prioRW,
 > 
-> 			//error mask
-> 		};
-> 		typedef void (*slotFunction_t)(menuItemIfce_t* _this, message_t _msg);
-> 		//static const uint32_t name_strSize = 24;
-> 		static uint32_t itemCnt;
+> 		//error mask
+> 	};
+> 	typedef void (*slotFunction_t)(menuItemIfce_t* _this, message_t _msg);
+> 	static uint32_t itemCnt;
 > 
 > 
-> 		type_t type;
-> 		menuList_t* myList;
-> 		uint32_t pptFlag;	//property flag
-> 		uint32_t list_id, unique_id;
-> 		std::string nameStr;
-> 		slotFunction_t slotFunc;
+> 	type_t type;
+> 	menuList_t* myList;
+> 	uint32_t pptFlag;	//property flag
+> 	uint32_t list_id, unique_id;
+> 	std::string nameStr;
+> 	slotFunction_t slotFunc;
 > 		/*
 > 		 * Configure by Constructor Default:
 > 		 *     type,unique_id,slotFunc
@@ -968,136 +967,134 @@ C.M.@hit    2019.09.09
 > 		 *     pptFlag,nameStr,(*data)
 > 		 * Configure by menuList insert() Default:
 > 		 *     myList,list_id,
-> 		 *
 > 		 */
 > 
-> 		virtual void installSlotFunction(slotFunction_t _func) final { slotFunc = _func; }
-> 		virtual void uninstallSlotFunction(void) final { slotFunc = NULL; }
-> 		virtual void slotCall(message_t _msg) final
-> 		{
-> 			if (slotFunc != NULL) { (*slotFunc)(this, _msg); }
-> 		}
-> 		//used when reading or saving data
-> 		virtual uint32_t getData(void) = 0;
-> 		virtual void setData(uint32_t _data) = 0;
-> 		virtual bool getIndex(menuItemIdex_t* _data) final;
-> 		//virtual bool cmpIndex(menuItemIdex_t* _data) final;
-> 		//used when in menuList
-> 		virtual void printSlot(appui_menu_t::dispSlot_t _slot) = 0;
-> 		virtual void directKeyOp(appVar_keyBTOp_t * _op) = 0;
-> 		//used when in menuItem
-> 		virtual void printDisp(void) = 0;
-> 		virtual void keyOp(appVar_keyBTOp_t * _op) = 0;
-> 	};
-> 	//End of UI Menu menuItem interface
+> 	virtual void installSlotFunction(slotFunction_t _func) final { slotFunc = _func; }
+> 	virtual void uninstallSlotFunction(void) final { slotFunc = NULL; }
+> 	virtual void slotCall(message_t _msg) final
+> 	{
+> 		if (slotFunc != NULL) { (*slotFunc)(this, _msg); }
+> 	}
+> 	//used when reading or saving data
+> 	virtual uint32_t getData(void) = 0;
+> 	virtual void setData(uint32_t _data) = 0;
+> 	virtual bool getIndex(menuItemIdex_t* _data) final;
+> 	//used when in menuList
+> 	virtual void printSlot(appui_menu_t::dispSlot_t _slot) = 0;
+> 	virtual void directKeyOp(appVar_keyBTOp_t * _op) = 0;
+> 	//used when in menuItem
+> 	virtual void printDisp(void) = 0;
+> 	virtual void keyOp(appVar_keyBTOp_t * _op) = 0;
+> };
+> //End of UI Menu menuItem interface
 > ```
->
+> 
 > 在创建基于上述接口类的子类时，只需公有继承上述接口类：
->
-> ```c++
+> 
+>```c++
 > //UI Menu menuItem menuEntry_type
-> 	class menuItem_menuType_t : public menuItemIfce_t
-> 	{
-> 	public:
-> 		menuList_t* data;
-> 		menuItem_menuType_t(menuList_t* _data, std::string _nameStr, uint32_t _pptFlag);
-> 		~menuItem_menuType_t(void);
-> 		//used when reading or saving data
-> 		void setData(uint32_t _data) final{}
-> 		uint32_t getData(void) final { return  0;/* (uint32_t)data;*/ }
-> 		//used when in menuList
-> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-> 		//used when in menuItem
-> 		void printDisp(void) final;
-> 		void keyOp(appVar_keyBTOp_t* _op) final;
-> 	};
+>class menuItem_menuType_t : public menuItemIfce_t
+> {
+> public:
+> 	menuList_t* data;
+> 	menuItem_menuType_t(menuList_t* _data, std::string _nameStr, uint32_t _pptFlag);
+> 	~menuItem_menuType_t(void);
+> 	//used when reading or saving data
+> 	void setData(uint32_t _data) final{}
+> 	uint32_t getData(void) final { return  0;/* (uint32_t)data;*/ }
+> 	//used when in menuList
+> 	void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 	void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 	//used when in menuItem
+> 	void printDisp(void) final;
+> 	void keyOp(appVar_keyBTOp_t* _op) final;
+> };
 > 	
-> 	//UI Menu menuItem integer_varible
-> 	class menuItem_variType_t : public menuItemIfce_t
-> 	{
-> 	public:
-> 		int32_t* data;
-> 		int32_t bData;
-> 		menuItem_variType_t(int32_t* _data, std::string _nameStr, uint32_t _pptFlag);
-> 		~menuItem_variType_t(void);
-> 		//used when reading or saving data
-> 		void setData(uint32_t _data) final { (*data) = _data; }
-> 		uint32_t getData(void) final { return *((uint32_t*)data); }
-> 		//used when in menuList
-> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-> 		//used when in menuItem
-> 		void printDisp(void) final;
-> 		void keyOp(appVar_keyBTOp_t* _op) final;
-> 	private:
-> 		static const int32_t lut[4];
-> 		int32_t v, e;
-> 		int32_t cur;	//cursor pos
-> 		void getContent(int32_t& v, int32_t& e, int32_t data);
-> 		void setContent(int32_t& data, int32_t v, int32_t e);
+> //UI Menu menuItem integer_varible
+> class menuItem_variType_t : public menuItemIfce_t
+> {
+> public:
+> 	int32_t* data;
+> 	int32_t bData;
+> 	menuItem_variType_t(int32_t* _data, std::string _nameStr, uint32_t _pptFlag);
+> 	~menuItem_variType_t(void);
+> 	//used when reading or saving data
+> 	void setData(uint32_t _data) final { (*data) = _data; }
+> 	uint32_t getData(void) final { return *((uint32_t*)data); }
+> 	//used when in menuList
+> 	void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 	void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 	//used when in menuItem
+> 	void printDisp(void) final;
+> 	void keyOp(appVar_keyBTOp_t* _op) final;
+> private:
+> 	static const int32_t lut[4];
+> 	int32_t v, e;
+> 	int32_t cur;	//cursor pos
+> 	void getContent(int32_t& v, int32_t& e, int32_t data);
+> 	void setContent(int32_t& data, int32_t v, int32_t e);
 > 		
-> 	};
+> };
 > 
-> 	//UI Menu menuItem floatpoint_varible
-> 	class menuItem_varfType_t : public menuItemIfce_t
+> //UI Menu menuItem floatpoint_varible
+> class menuItem_varfType_t : public menuItemIfce_t
+> {
+> public:
+> 	float* data;
+> 	float bData;
+> 	menuItem_varfType_t(float* _data, std::string _nameStr, uint32_t _pptFlag);
+> 	~menuItem_varfType_t(void);
+> 	//used when reading or saving data
+> 	void setData(uint32_t _data) final { (*data) = *((float*)(&_data)); }
+> 	uint32_t getData(void) final { return *((uint32_t*)data); }
+> 	//used when in menuList
+> 	void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 	void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 	//used when in menuItem
+> 	void printDisp(void) final;
+> 	void keyOp(appVar_keyBTOp_t* _op) final;
+> private:
+> 	static const int32_t lut[4];
+> 	int32_t v, e;
+> 	int32_t cur;	//cursor pos
+> 	void getContent(int32_t& v, int32_t& e, float data);
+> 	void setContent(float& data, int32_t v, int32_t e);
+> 
+> };
+> 
+> 
+> //UI Menu menuItem process_type
+> class menuItem_procType_t : public menuItemIfce_t
+> {
+> public:
+> 	enum cmdFlag_t
 > 	{
-> 	public:
-> 		float* data;
-> 		float bData;
-> 		menuItem_varfType_t(float* _data, std::string _nameStr, uint32_t _pptFlag);
-> 		~menuItem_varfType_t(void);
-> 		//used when reading or saving data
-> 		void setData(uint32_t _data) final { (*data) = *((float*)(&_data)); }
-> 		uint32_t getData(void) final { return *((uint32_t*)data); }
-> 		//used when in menuList
-> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-> 		//used when in menuItem
-> 		void printDisp(void) final;
-> 		void keyOp(appVar_keyBTOp_t* _op) final;
-> 	private:
-> 		static const int32_t lut[4];
-> 		int32_t v, e;
-> 		int32_t cur;	//cursor pos
-> 		void getContent(int32_t& v, int32_t& e, float data);
-> 		void setContent(float& data, int32_t v, int32_t e);
+> 		menu_dircKeyOp_avail = 1 << 0,
+> 		menu_itemKeyOp_avail = 1 << 1,
+> 		menu_dispRequest = 1 << 2,
 > 
+> 		proc_exitProcess = 1 << 15,
 > 	};
+> 	typedef void (*procHandler_t)(appVar_keyBTOp_t* _op,uint32_t& _flag, int32_t& _retv);
 > 
+> 	int32_t retv;
+> 	uint32_t flag;
+> 	procHandler_t data;
+> 	menuItem_procType_t(procHandler_t _data, std::string _nameStr, uint32_t _pptFlag);
+> 	~menuItem_procType_t(void);
 > 
-> 	//UI Menu menuItem process_type
-> 	class menuItem_procType_t : public menuItemIfce_t
-> 	{
-> 	public:
-> 		enum cmdFlag_t
-> 		{
-> 			menu_dircKeyOp_avail = 1 << 0,
-> 			menu_itemKeyOp_avail = 1 << 1,
-> 			menu_dispRequest = 1 << 2,
-> 
-> 			proc_exitProcess = 1 << 15,
-> 		};
-> 		typedef void (*procHandler_t)(appVar_keyBTOp_t* _op,uint32_t& _flag, int32_t& _retv);
-> 
-> 		int32_t retv;
-> 		uint32_t flag;
-> 		procHandler_t data;
-> 		menuItem_procType_t(procHandler_t _data, std::string _nameStr, uint32_t _pptFlag);
-> 		~menuItem_procType_t(void);
-> 
-> 		//used when reading or saving data
-> 		void setData(uint32_t _data) final{}
-> 		uint32_t getData(void) final { return 0; }
-> 		//used when in menuList
-> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-> 		//used when in menuItem
-> 		void printDisp(void) final;
-> 		void keyOp(appVar_keyBTOp_t* _op) final;
-> 	};
+> 	//used when reading or saving data
+> 	void setData(uint32_t _data) final{}
+> 	uint32_t getData(void) final { return 0; }
+> 	//used when in menuList
+> 	void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 	void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 	//used when in menuItem
+> 	void printDisp(void) final;
+> 	void keyOp(appVar_keyBTOp_t* _op) final;
+> };
 > ```
->
+> 
 > 上面我创建了四种菜单项类型：子菜单类型、整形参数类型、浮点参数类型、函数调用类型。
 
 
