@@ -297,14 +297,14 @@ C.M.@hit    2019.09.09
 
 #### 2.2. 变量的使用
 
-7. 声明变量时，必须对变量进行初始化。禁止默认未初始化的变量值为0的行为。禁止用未初始化的变量参与运算。
+1. 声明变量时，必须对变量进行初始化。禁止默认未初始化的变量值为0的行为。禁止用未初始化的变量参与运算。
 
 - ##### 全局变量
 
 
-8. 在C++代码中，应避免使用全局变量。在C语言中，也应该谨慎使用全局变量。
+2. 在C++代码中，应避免使用全局变量。在C语言中，也应该谨慎使用全局变量。
 
-9. 避免以全局变量的形式在模块之间传递变量。如要在模块之间传递变量，应该通过传递指针或传递引用的形式。
+3. 避免以全局变量的形式在模块之间传递变量。如要在模块之间传递变量，应该通过传递指针或传递引用的形式。
 
    > 示例1：
    >
@@ -387,14 +387,15 @@ C.M.@hit    2019.09.09
    > 这种方式完美地规避了前面提到的问题。底层驱动提供的接口需要调用它的上层程序传递给底层驱动变量的引用，这样底层驱动就可以把读到的数据放到上层程序指定的地方。上面的程序基于C++编写，C语言没有“引用”的概念，只需把C++的引用换成C语言的指针即可。实际上，“引用”就是对指针的一次包装。这是我们第一次接触“接口”的概念。接口，可以简单地定义成**“用于访问一类数据的统一方法”**。因此，这条规范也可以写成：**“以函数为接口，而不以变量为接口”**。
    >
    
-10. 仅在一个模块内使用的全局变量，推荐在源文件内定义，而不在对应头文件中进行`extern`声明。只有需要外部访问的全局变量，才在头文件中以`extern`修饰声明。
+4. 仅在一个模块内使用的全局变量，推荐在源文件内定义，而不在对应头文件中进行`extern`声明。只有需要外部访问的全局变量，才在头文件中以`extern`修饰声明。
 
 - ##### 静态变量
 
+5. 仅在一个函数内使用的全局变量，应该使用函数内的静态（static）变量。
 
-11. 仅在一个函数内使用的全局变量，应该使用函数内的静态（static）变量。
-12. 不建议在头文件中定义变量。如果不得不在头文件中定义变量（不加`extern`的情况），则必须以static修饰，且禁止重复包含。这种情况往往出现在一个模块只有头文件、没有对应源文件的情况。
-13.  对C++广义类（`class`和`struct`）中的常量和由所有对象共享的属性，应当使用静态成员变量。
+6. 不建议在头文件中定义变量。如果不得不在头文件中定义变量（不加`extern`的情况），则必须以static修饰，且禁止重复包含。这种情况往往出现在一个模块只有头文件、没有对应源文件的情况。
+
+7. 对C++广义类（`class`和`struct`）中的常量和由所有对象共享的属性，应当使用静态成员变量。
 
 - ##### 局部变量
 
@@ -402,15 +403,13 @@ C.M.@hit    2019.09.09
 
 - ##### 常量与宏
 
-
-14. 对于单片机编程，不经特殊处理的情况下，所有常量（字面值和声明值）位于程序存储器。一般来说，MK66、KV58等普通单片机的程序存储器I/O性能弱于随机存储器。在这类单片机上，由于性能考量，即使一个需要频繁访问的变量在逻辑上是常量，也不应该以`const`修饰或使用宏定义。
+8. 对于单片机编程，不经特殊处理的情况下，所有常量（字面值和声明值）位于程序存储器。一般来说，MK66、KV58等普通单片机的程序存储器I/O性能弱于随机存储器。在这类单片机上，由于性能考量，即使一个需要频繁访问的变量在逻辑上是常量，也不应该以`const`修饰或使用宏定义。
 
 - ##### 枚举类型
 
+9. 对于具有互斥属性或特定含义的一组数据，应该使用枚举类型（`enum`）加以描述。
 
-15. 对于具有互斥属性或特定含义的一组数据，应该使用枚举类型（`enum`）加以描述。
-
-16. 对于C11或C++11及更新的标准C/++，使用枚举类型（`enum`）时必须指明所用的存储类型。C语言在声明全局枚举类型时，其内部的枚举项必须含有与枚举类型名相同的前缀。C++11及更新标准的C++，在声明全局枚举类型时，必须用`enum class`的形式声明，而不必带有前缀；在声明作用域内的枚举类型时，如果作用域范围较大，也应该使用`enum class`的形式。
+10. 对于C11或C++11及更新的标准C/++，使用枚举类型（`enum`）时必须指明所用的存储类型。C语言在声明全局枚举类型时，其内部的枚举项必须含有与枚举类型名相同的前缀。C++11及更新标准的C++，在声明全局枚举类型时，必须用`enum class`的形式声明，而不必带有前缀；在声明作用域内的枚举类型时，如果作用域范围较大，也应该使用`enum class`的形式。
 
    > 示例1：
    >
@@ -455,8 +454,7 @@ C.M.@hit    2019.09.09
 
 - ###### 常量枚举
 
-
-17. 当所表示的数据为一系列具有相似含义的数（如某I2C设备的寄存器地址）时，必须采用枚举类型。这种用法称为常量枚举。
+11. 当所表示的数据为一系列具有相似含义的数（如某I2C设备的寄存器地址）时，必须采用枚举类型。这种用法称为常量枚举。
 
    > 示例1：
    >
@@ -483,8 +481,7 @@ C.M.@hit    2019.09.09
 
 - ###### 标志位枚举
 
-
-18. 当所表示的数据为按位表示的逻辑（如某flag的各位代表的含义）时，必须采用枚举类型。这种用呀称为标志位枚举。
+12. 当所表示的数据为按位表示的逻辑（如某flag的各位代表的含义）时，必须采用枚举类型。这种用呀称为标志位枚举。
 
    > 示例1：
    >
@@ -533,48 +530,48 @@ C.M.@hit    2019.09.09
 
 #### 3.2. 条件语句
 
-2. if和switch-case语句必须覆盖变量的所有可能性。如果某些分支逻辑上永远不可能出现，使用`else`或`default:`分支以捕获异常。
+1. if和switch-case语句必须覆盖变量的所有可能性。如果某些分支逻辑上永远不可能出现，使用`else`或`default:`分支以捕获异常。
 
-   > 示例1：
-   >
-   > ```c++
-   > int sw = 0;
-   > 
-   > // some code to change sw value...
-   > 
-   > if(sw < 10)
-   > {
-   >     printf("SW < 10\n");
-   > }
-   > else if (sw < 20)
-   > {
-   >     printf("10 <= SW < 20\n");
-   > }
-   > else
-   > {
-   >     printf("Error!\n");
-   > }
-   > 
-   > 
-   > switch(sw)
-   > {
-   >     case 0:
-   >         printf("sw = 0\n");
-   >         break;
-   >     case 1:
-   >         printf("sw = 1\n");
-   >         break;
-   >     case 2:
-   >         printf("sw = 2\n");
-   >         break;
-   >     default:
-   >         printf("sw Out of Range!\n");
-   >         break;
-   > }
-   > 
-   > ```
-   >
-   > 
+> 示例1：
+>
+> ```c++
+> int sw = 0;
+> 
+> // some code to change sw value...
+> 
+> if(sw < 10)
+> {
+>     printf("SW < 10\n");
+> }
+> else if (sw < 20)
+> {
+>     printf("10 <= SW < 20\n");
+> }
+> else
+> {
+>     printf("Error!\n");
+> }
+> 
+> 
+> switch(sw)
+> {
+>     case 0:
+>         printf("sw = 0\n");
+>         break;
+>     case 1:
+>         printf("sw = 1\n");
+>         break;
+>     case 2:
+>         printf("sw = 2\n");
+>         break;
+>     default:
+>         printf("sw Out of Range!\n");
+>         break;
+> }
+> 
+> ```
+>
+> 
 
 
 
@@ -678,8 +675,7 @@ C.M.@hit    2019.09.09
 
 - ##### 内联函数
 
-
-10. 当一个函数较短且频繁调用时，建议使用内联函数。内联函数可以节约用于函数跳转的时间，提高执行效率。内联函数的函数体需要写在头文件中。
+1. 当一个函数较短且频繁调用时，建议使用内联函数。内联函数可以节约用于函数跳转的时间，提高执行效率。内联函数的函数体需要写在头文件中。
 
    > 示例1：
    >
@@ -703,13 +699,11 @@ C.M.@hit    2019.09.09
 
 - ##### 静态函数
 
-
-11. 当一个函数被频繁调用时，建议使用静态函数。静态函数将永久地驻留内存，使得调用该函数时无需开辟新的栈空间，提高执行效率。
+2. 当一个函数被频繁调用时，建议使用静态函数。静态函数将永久地驻留内存，使得调用该函数时无需开辟新的栈空间，提高执行效率。
 
 - ##### 函数的返回值
 
-
-12. 必须谨慎使用函数返回值。任何存在异常状态的函数，都必须具有`status_t`类型的返回值，用于表示该函数执行的状态。函数正确执行必须返回0。除非有充分的理由（例如适配器函数等特殊情况 ），否则禁止将函数返回值用于传递结果。如要返回结果，应该在参数中添加用于保存结果的指针或引用。
+3. 必须谨慎使用函数返回值。任何存在异常状态的函数，都必须具有`status_t`类型的返回值，用于表示该函数执行的状态。函数正确执行必须返回0。除非有充分的理由（例如适配器函数等特殊情况 ），否则禁止将函数返回值用于传递结果。如要返回结果，应该在参数中添加用于保存结果的指针或引用。
 
    > 示例1
    >
@@ -758,7 +752,7 @@ C.M.@hit    2019.09.09
 
 #### 4.3. 函数注释
 
-13. 注释格式：`@brief`用于说明函数的主要功能；`@param`用于说明各参数的作用。
+1. 注释格式：`@brief`用于说明函数的主要功能；`@param`用于说明各参数的作用。
 
    > 示例1：
    >
@@ -780,7 +774,7 @@ C.M.@hit    2019.09.09
    >
    > 该示例来自K66的NXP官方SDK。
 
-14. 所有可外部调用的函数必须含有完善的注释。内部函数按需。
+2. 所有可外部调用的函数必须含有完善的注释。内部函数按需。
 
 
 
@@ -825,286 +819,286 @@ C.M.@hit    2019.09.09
 
 #### 5.2. （C语言）结构体的使用
 
-3. 对于C语言中需要创建多个实例的项目，应将每个实例共有的数据结构抽象为结构体，并提供一组函数用于操作这些数据结构。
+1. 对于C语言中需要创建多个实例的项目，应将每个实例共有的数据结构抽象为结构体，并提供一组函数用于操作这些数据结构。
 
-   > 示例1：
-   >
-   > 参见K66 MCUXpresso SDK中的各种Handle。
+> 示例1：
+>
+> 参见K66 MCUXpresso SDK中的各种Handle。
 
-   
+
 
 #### 5.3. （C++语言）类的使用
 
-4. 对于C++中的任何功能相对独立的模块，创建类以界定其数据结构和方法的作用域。如果能且仅能创建一个实例，使用单件模式。如果能且仅能创建指定个数的实例，使用改进的单件模式（多件模式）。
+1. 对于C++中的任何功能相对独立的模块，创建类以界定其数据结构和方法的作用域。如果能且仅能创建一个实例，使用单件模式。如果能且仅能创建指定个数的实例，使用改进的单件模式（多件模式）。
 
-   > 示例1：单件模式的一种实现
-   >
-   > 这是用户界面UI的显示适配器的部分代码。由于通常情况下我们仅拥有一块屏幕，我们不希望用户随意创建该显示适配器的实例，故使用单件模式。单件模式的实现有很多种，这里按照需要取其中一种：
-   >
-   > ```c++
-   > /* app_ui.hpp */
-   > 
-   > //display HAL
-   > class appui_disp_t
-   > {
-   > public:
-   > 	static appui_disp_t& GetInst(void)
-   > 	{
-   > 		static appui_disp_t inst;
-   > 		return inst;
-   > 	}
-   >  
-   > 	//...
-   > 
-   > private:
-   > 	appui_disp_t(void) {}
-   > 	appui_disp_t(const appui_disp_t&);
-   > 	appui_disp_t& operator = (const appui_disp_t&);
-   > };
-   > 
-   > 
-   > ```
-   >
-   > 首先，将该类的默认构造函数、拷贝构造函数、赋值运算符定义为私有，从而不可能在此类作用于外创建该类的实例。然后创建公有静态函数`static appui_disp_t& appui_disp_t::GetInst(void);`，在此函数内创建静态实例`static appui_disp_t inst`。调用该函数时，永远返回对`inst`的引用。
-   >
-   > 
-   >
-   > 示例2：改进的单件模式（多件模式）
-   >
-   > 这是串口驱动的部分代码。此代码共使用三组串口，分别用于调试（`dbugInst`）、无线数传（`wlanInst`）、通信（`intcInst`）。由于串口的使用受到硬件的限制，我们不希望用户随意创建串口对象的实例。而由于需要预先创建的串口实例有三个，前面的单件模式已无法胜任。因此对单件模式做如下改进：
-   >
-   > ```C++
-   > /* drv_uartmgr.hpp */
-   > 
-   > class uartmgr_t
-   > {
-   > public:
-   > 	static uartmgr_t& GetInst(LPUART_Type* instNum)
-   > 	{
-   > 		static uartmgr_t dbugInst(LPUART1);
-   > 		static uartmgr_t wlanInst(LPUART4);
-   > 		static uartmgr_t intcInst(LPUART5);
-   > 		switch ((uint32_t)instNum)
-   > 		{
-   > 		case LPUART1_BASE:
-   > 			return dbugInst;
-   > 			break;
-   > 		case LPUART4_BASE:
-   > 			return wlanInst;
-   > 			break;
-   > 		case LPUART5_BASE:
-   > 			return intcInst;
-   > 			break;
-   > 		default:
-   > 			return dbugInst;
-   > 			break;
-   > 		}
-   > 		return dbugInst;
-   > 	}
-   > 	
-   > 	//...
-   > 
-   > private:
-   > 
-   > 	uartmgr_t(LPUART_Type* _base)
-   > 	{
-   > 		//...
-   > 	}
-   > };
-   > ```
-   >
-   > 首先，将该类的默认构造函数、拷贝构造函数、赋值运算符定义为私有，从而不可能在此类作用于外创建该类的实例。然后创建公有静态函数`static uartmgr_t& uartmgr_t::GetInst(LPUART_Type* instNum);`。在此函数内创建三个静态实例`static uartmgr_t dbugInst(LPUART1);`、`static uartmgr_t wlanInst(LPUART4);`、`static uartmgr_t intcInst(LPUART5);`。调用该函数时，根据参数返回对前述三个静态实例之一的引用。
+> 示例1：单件模式的一种实现
+>
+> 这是用户界面UI的显示适配器的部分代码。由于通常情况下我们仅拥有一块屏幕，我们不希望用户随意创建该显示适配器的实例，故使用单件模式。单件模式的实现有很多种，这里按照需要取其中一种：
+>
+> ```c++
+> /* app_ui.hpp */
+> 
+> //display HAL
+> class appui_disp_t
+> {
+> public:
+> 	static appui_disp_t& GetInst(void)
+> 	{
+> 		static appui_disp_t inst;
+> 		return inst;
+> 	}
+>  
+> 	//...
+> 
+> private:
+> 	appui_disp_t(void) {}
+> 	appui_disp_t(const appui_disp_t&);
+> 	appui_disp_t& operator = (const appui_disp_t&);
+> };
+> 
+> 
+> ```
+>
+> 首先，将该类的默认构造函数、拷贝构造函数、赋值运算符定义为私有，从而不可能在此类作用于外创建该类的实例。然后创建公有静态函数`static appui_disp_t& appui_disp_t::GetInst(void);`，在此函数内创建静态实例`static appui_disp_t inst`。调用该函数时，永远返回对`inst`的引用。
+>
+> 
+>
+> 示例2：改进的单件模式（多件模式）
+>
+> 这是串口驱动的部分代码。此代码共使用三组串口，分别用于调试（`dbugInst`）、无线数传（`wlanInst`）、通信（`intcInst`）。由于串口的使用受到硬件的限制，我们不希望用户随意创建串口对象的实例。而由于需要预先创建的串口实例有三个，前面的单件模式已无法胜任。因此对单件模式做如下改进：
+>
+> ```C++
+> /* drv_uartmgr.hpp */
+> 
+> class uartmgr_t
+> {
+> public:
+> 	static uartmgr_t& GetInst(LPUART_Type* instNum)
+> 	{
+> 		static uartmgr_t dbugInst(LPUART1);
+> 		static uartmgr_t wlanInst(LPUART4);
+> 		static uartmgr_t intcInst(LPUART5);
+> 		switch ((uint32_t)instNum)
+> 		{
+> 		case LPUART1_BASE:
+> 			return dbugInst;
+> 			break;
+> 		case LPUART4_BASE:
+> 			return wlanInst;
+> 			break;
+> 		case LPUART5_BASE:
+> 			return intcInst;
+> 			break;
+> 		default:
+> 			return dbugInst;
+> 			break;
+> 		}
+> 		return dbugInst;
+> 	}
+> 	
+> 	//...
+> 
+> private:
+> 
+> 	uartmgr_t(LPUART_Type* _base)
+> 	{
+> 		//...
+> 	}
+> };
+> ```
+>
+> 首先，将该类的默认构造函数、拷贝构造函数、赋值运算符定义为私有，从而不可能在此类作用于外创建该类的实例。然后创建公有静态函数`static uartmgr_t& uartmgr_t::GetInst(LPUART_Type* instNum);`。在此函数内创建三个静态实例`static uartmgr_t dbugInst(LPUART1);`、`static uartmgr_t wlanInst(LPUART4);`、`static uartmgr_t intcInst(LPUART5);`。调用该函数时，根据参数返回对前述三个静态实例之一的引用。
 
-   
 
-5. 对于C++中的一组具有相似方法的对象，创建纯虚类作为接口。
 
-   > 示例1：
-   >
-   > 在编写用户界面中的菜单时，菜单项有很多种：整形变量、浮点变量、子菜单等，甚至可以通过菜单调用函数。这些类型的菜单都具有一组相似的方法，我们把它抽象出来，定义为虚基类。
-   >
-   > 注意：**原则上C++用作接口类的基类必须是纯虚基类，不按规定编写可能产生难以预期的后果。**~~我在这里为了方便违背了这一规则。除非了解非纯虚基类用作接口时实成员函数的处理方法，否则**禁止用非纯虚基类作为接口类**。要规避这一问题，只需将接口类所用到的实函数换成虚函数，并在每个子类中将该虚函数重载为与想要定义的实函数相同的函数。（事实上，只需保证非纯虚基类用作接口时，实成员函数不可被重载，即可使用非纯虚基类作为接口类。这也是C++规范对它的程序员高度信任的表现。）~~
-   >
-   > ```c++
-   > //UI Menu menuItem interface
-   > 	class menuItemIfce_t
-   > 	{
-   > 	public:
-   > 		enum type_t : uint8_t
-   > 		{
-   > 			nullType,
-   > 			variType,
-   > 			varfType,
-   > 			procType,
-   > 			menuType,
-   > 		};
-   > 		enum message_t : uint32_t
-   > 		{
-   > 			selected,
-   > 			deselected,
-   > 			dataUpdate,
-   > 		};
-   > 		enum propety_t : uint32_t
-   > 		{
-   > 			//data config
-   > 			data_global = 1 << 0,	//data save in global area
-   > 			data_region = 1 << 1,	//data save in regional area
-   > 			data_getPos = data_global | data_region,
-   > 			data_ROFlag = 1 << 2,	//data read only
-   > 			data_prioRW = 1 << 3,	//data rw prior than other item
-   > 			data_getCfg = data_global | data_region | data_ROFlag | data_prioRW,
-   > 
-   > 			//error mask
-   > 		};
-   > 		typedef void (*slotFunction_t)(menuItemIfce_t* _this, message_t _msg);
-   > 		//static const uint32_t name_strSize = 24;
-   > 		static uint32_t itemCnt;
-   > 
-   > 
-   > 		type_t type;
-   > 		menuList_t* myList;
-   > 		uint32_t pptFlag;	//property flag
-   > 		uint32_t list_id, unique_id;
-   > 		std::string nameStr;
-   > 		slotFunction_t slotFunc;
-   > 		/*
-   > 		 * Configure by Constructor Default:
-   > 		 *     type,unique_id,slotFunc
-   > 		 * Configure by Constructor Parameter:
-   > 		 *     pptFlag,nameStr,(*data)
-   > 		 * Configure by menuList insert() Default:
-   > 		 *     myList,list_id,
-   > 		 *
-   > 		 */
-   > 
-   > 		virtual void installSlotFunction(slotFunction_t _func) final { slotFunc = _func; }
-   > 		virtual void uninstallSlotFunction(void) final { slotFunc = NULL; }
-   > 		virtual void slotCall(message_t _msg) final
-   > 		{
-   > 			if (slotFunc != NULL) { (*slotFunc)(this, _msg); }
-   > 		}
-   > 		//used when reading or saving data
-   > 		virtual uint32_t getData(void) = 0;
-   > 		virtual void setData(uint32_t _data) = 0;
-   > 		virtual bool getIndex(menuItemIdex_t* _data) final;
-   > 		//virtual bool cmpIndex(menuItemIdex_t* _data) final;
-   > 		//used when in menuList
-   > 		virtual void printSlot(appui_menu_t::dispSlot_t _slot) = 0;
-   > 		virtual void directKeyOp(appVar_keyBTOp_t * _op) = 0;
-   > 		//used when in menuItem
-   > 		virtual void printDisp(void) = 0;
-   > 		virtual void keyOp(appVar_keyBTOp_t * _op) = 0;
-   > 	};
-   > 	//End of UI Menu menuItem interface
-   > ```
-   >
-   > 在创建基于上述接口类的子类时，只需公有继承上述接口类：
-   >
-   > ```c++
-   > //UI Menu menuItem menuEntry_type
-   > 	class menuItem_menuType_t : public menuItemIfce_t
-   > 	{
-   > 	public:
-   > 		menuList_t* data;
-   > 		menuItem_menuType_t(menuList_t* _data, std::string _nameStr, uint32_t _pptFlag);
-   > 		~menuItem_menuType_t(void);
-   > 		//used when reading or saving data
-   > 		void setData(uint32_t _data) final{}
-   > 		uint32_t getData(void) final { return  0;/* (uint32_t)data;*/ }
-   > 		//used when in menuList
-   > 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-   > 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-   > 		//used when in menuItem
-   > 		void printDisp(void) final;
-   > 		void keyOp(appVar_keyBTOp_t* _op) final;
-   > 	};
-   > 	
-   > 	//UI Menu menuItem integer_varible
-   > 	class menuItem_variType_t : public menuItemIfce_t
-   > 	{
-   > 	public:
-   > 		int32_t* data;
-   > 		int32_t bData;
-   > 		menuItem_variType_t(int32_t* _data, std::string _nameStr, uint32_t _pptFlag);
-   > 		~menuItem_variType_t(void);
-   > 		//used when reading or saving data
-   > 		void setData(uint32_t _data) final { (*data) = _data; }
-   > 		uint32_t getData(void) final { return *((uint32_t*)data); }
-   > 		//used when in menuList
-   > 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-   > 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-   > 		//used when in menuItem
-   > 		void printDisp(void) final;
-   > 		void keyOp(appVar_keyBTOp_t* _op) final;
-   > 	private:
-   > 		static const int32_t lut[4];
-   > 		int32_t v, e;
-   > 		int32_t cur;	//cursor pos
-   > 		void getContent(int32_t& v, int32_t& e, int32_t data);
-   > 		void setContent(int32_t& data, int32_t v, int32_t e);
-   > 		
-   > 	};
-   > 
-   > 	//UI Menu menuItem floatpoint_varible
-   > 	class menuItem_varfType_t : public menuItemIfce_t
-   > 	{
-   > 	public:
-   > 		float* data;
-   > 		float bData;
-   > 		menuItem_varfType_t(float* _data, std::string _nameStr, uint32_t _pptFlag);
-   > 		~menuItem_varfType_t(void);
-   > 		//used when reading or saving data
-   > 		void setData(uint32_t _data) final { (*data) = *((float*)(&_data)); }
-   > 		uint32_t getData(void) final { return *((uint32_t*)data); }
-   > 		//used when in menuList
-   > 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-   > 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-   > 		//used when in menuItem
-   > 		void printDisp(void) final;
-   > 		void keyOp(appVar_keyBTOp_t* _op) final;
-   > 	private:
-   > 		static const int32_t lut[4];
-   > 		int32_t v, e;
-   > 		int32_t cur;	//cursor pos
-   > 		void getContent(int32_t& v, int32_t& e, float data);
-   > 		void setContent(float& data, int32_t v, int32_t e);
-   > 
-   > 	};
-   > 
-   > 
-   > 	//UI Menu menuItem process_type
-   > 	class menuItem_procType_t : public menuItemIfce_t
-   > 	{
-   > 	public:
-   > 		enum cmdFlag_t
-   > 		{
-   > 			menu_dircKeyOp_avail = 1 << 0,
-   > 			menu_itemKeyOp_avail = 1 << 1,
-   > 			menu_dispRequest = 1 << 2,
-   > 
-   > 			proc_exitProcess = 1 << 15,
-   > 		};
-   > 		typedef void (*procHandler_t)(appVar_keyBTOp_t* _op,uint32_t& _flag, int32_t& _retv);
-   > 
-   > 		int32_t retv;
-   > 		uint32_t flag;
-   > 		procHandler_t data;
-   > 		menuItem_procType_t(procHandler_t _data, std::string _nameStr, uint32_t _pptFlag);
-   > 		~menuItem_procType_t(void);
-   > 
-   > 		//used when reading or saving data
-   > 		void setData(uint32_t _data) final{}
-   > 		uint32_t getData(void) final { return 0; }
-   > 		//used when in menuList
-   > 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
-   > 		void directKeyOp(appVar_keyBTOp_t* _op) final;
-   > 		//used when in menuItem
-   > 		void printDisp(void) final;
-   > 		void keyOp(appVar_keyBTOp_t* _op) final;
-   > 	};
-   > ```
-   >
-   > 上面我创建了四种菜单项类型：子菜单类型、整形参数类型、浮点参数类型、函数调用类型。
+2. 对于C++中的一组具有相似方法的对象，创建纯虚类作为接口。
+
+> 示例1：
+>
+> 在编写用户界面中的菜单时，菜单项有很多种：整形变量、浮点变量、子菜单等，甚至可以通过菜单调用函数。这些类型的菜单都具有一组相似的方法，我们把它抽象出来，定义为虚基类。
+>
+> 注意：**原则上C++用作接口类的基类必须是纯虚基类，不按规定编写可能产生难以预期的后果。**~~我在这里为了方便违背了这一规则。除非了解非纯虚基类用作接口时实成员函数的处理方法，否则**禁止用非纯虚基类作为接口类**。要规避这一问题，只需将接口类所用到的实函数换成虚函数，并在每个子类中将该虚函数重载为与想要定义的实函数相同的函数。（事实上，只需保证非纯虚基类用作接口时，实成员函数不可被重载，即可使用非纯虚基类作为接口类。这也是C++规范对它的程序员高度信任的表现。）~~
+>
+> ```c++
+> //UI Menu menuItem interface
+> 	class menuItemIfce_t
+> 	{
+> 	public:
+> 		enum type_t : uint8_t
+> 		{
+> 			nullType,
+> 			variType,
+> 			varfType,
+> 			procType,
+> 			menuType,
+> 		};
+> 		enum message_t : uint32_t
+> 		{
+> 			selected,
+> 			deselected,
+> 			dataUpdate,
+> 		};
+> 		enum propety_t : uint32_t
+> 		{
+> 			//data config
+> 			data_global = 1 << 0,	//data save in global area
+> 			data_region = 1 << 1,	//data save in regional area
+> 			data_getPos = data_global | data_region,
+> 			data_ROFlag = 1 << 2,	//data read only
+> 			data_prioRW = 1 << 3,	//data rw prior than other item
+> 			data_getCfg = data_global | data_region | data_ROFlag | data_prioRW,
+> 
+> 			//error mask
+> 		};
+> 		typedef void (*slotFunction_t)(menuItemIfce_t* _this, message_t _msg);
+> 		//static const uint32_t name_strSize = 24;
+> 		static uint32_t itemCnt;
+> 
+> 
+> 		type_t type;
+> 		menuList_t* myList;
+> 		uint32_t pptFlag;	//property flag
+> 		uint32_t list_id, unique_id;
+> 		std::string nameStr;
+> 		slotFunction_t slotFunc;
+> 		/*
+> 		 * Configure by Constructor Default:
+> 		 *     type,unique_id,slotFunc
+> 		 * Configure by Constructor Parameter:
+> 		 *     pptFlag,nameStr,(*data)
+> 		 * Configure by menuList insert() Default:
+> 		 *     myList,list_id,
+> 		 *
+> 		 */
+> 
+> 		virtual void installSlotFunction(slotFunction_t _func) final { slotFunc = _func; }
+> 		virtual void uninstallSlotFunction(void) final { slotFunc = NULL; }
+> 		virtual void slotCall(message_t _msg) final
+> 		{
+> 			if (slotFunc != NULL) { (*slotFunc)(this, _msg); }
+> 		}
+> 		//used when reading or saving data
+> 		virtual uint32_t getData(void) = 0;
+> 		virtual void setData(uint32_t _data) = 0;
+> 		virtual bool getIndex(menuItemIdex_t* _data) final;
+> 		//virtual bool cmpIndex(menuItemIdex_t* _data) final;
+> 		//used when in menuList
+> 		virtual void printSlot(appui_menu_t::dispSlot_t _slot) = 0;
+> 		virtual void directKeyOp(appVar_keyBTOp_t * _op) = 0;
+> 		//used when in menuItem
+> 		virtual void printDisp(void) = 0;
+> 		virtual void keyOp(appVar_keyBTOp_t * _op) = 0;
+> 	};
+> 	//End of UI Menu menuItem interface
+> ```
+>
+> 在创建基于上述接口类的子类时，只需公有继承上述接口类：
+>
+> ```c++
+> //UI Menu menuItem menuEntry_type
+> 	class menuItem_menuType_t : public menuItemIfce_t
+> 	{
+> 	public:
+> 		menuList_t* data;
+> 		menuItem_menuType_t(menuList_t* _data, std::string _nameStr, uint32_t _pptFlag);
+> 		~menuItem_menuType_t(void);
+> 		//used when reading or saving data
+> 		void setData(uint32_t _data) final{}
+> 		uint32_t getData(void) final { return  0;/* (uint32_t)data;*/ }
+> 		//used when in menuList
+> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 		//used when in menuItem
+> 		void printDisp(void) final;
+> 		void keyOp(appVar_keyBTOp_t* _op) final;
+> 	};
+> 	
+> 	//UI Menu menuItem integer_varible
+> 	class menuItem_variType_t : public menuItemIfce_t
+> 	{
+> 	public:
+> 		int32_t* data;
+> 		int32_t bData;
+> 		menuItem_variType_t(int32_t* _data, std::string _nameStr, uint32_t _pptFlag);
+> 		~menuItem_variType_t(void);
+> 		//used when reading or saving data
+> 		void setData(uint32_t _data) final { (*data) = _data; }
+> 		uint32_t getData(void) final { return *((uint32_t*)data); }
+> 		//used when in menuList
+> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 		//used when in menuItem
+> 		void printDisp(void) final;
+> 		void keyOp(appVar_keyBTOp_t* _op) final;
+> 	private:
+> 		static const int32_t lut[4];
+> 		int32_t v, e;
+> 		int32_t cur;	//cursor pos
+> 		void getContent(int32_t& v, int32_t& e, int32_t data);
+> 		void setContent(int32_t& data, int32_t v, int32_t e);
+> 		
+> 	};
+> 
+> 	//UI Menu menuItem floatpoint_varible
+> 	class menuItem_varfType_t : public menuItemIfce_t
+> 	{
+> 	public:
+> 		float* data;
+> 		float bData;
+> 		menuItem_varfType_t(float* _data, std::string _nameStr, uint32_t _pptFlag);
+> 		~menuItem_varfType_t(void);
+> 		//used when reading or saving data
+> 		void setData(uint32_t _data) final { (*data) = *((float*)(&_data)); }
+> 		uint32_t getData(void) final { return *((uint32_t*)data); }
+> 		//used when in menuList
+> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 		//used when in menuItem
+> 		void printDisp(void) final;
+> 		void keyOp(appVar_keyBTOp_t* _op) final;
+> 	private:
+> 		static const int32_t lut[4];
+> 		int32_t v, e;
+> 		int32_t cur;	//cursor pos
+> 		void getContent(int32_t& v, int32_t& e, float data);
+> 		void setContent(float& data, int32_t v, int32_t e);
+> 
+> 	};
+> 
+> 
+> 	//UI Menu menuItem process_type
+> 	class menuItem_procType_t : public menuItemIfce_t
+> 	{
+> 	public:
+> 		enum cmdFlag_t
+> 		{
+> 			menu_dircKeyOp_avail = 1 << 0,
+> 			menu_itemKeyOp_avail = 1 << 1,
+> 			menu_dispRequest = 1 << 2,
+> 
+> 			proc_exitProcess = 1 << 15,
+> 		};
+> 		typedef void (*procHandler_t)(appVar_keyBTOp_t* _op,uint32_t& _flag, int32_t& _retv);
+> 
+> 		int32_t retv;
+> 		uint32_t flag;
+> 		procHandler_t data;
+> 		menuItem_procType_t(procHandler_t _data, std::string _nameStr, uint32_t _pptFlag);
+> 		~menuItem_procType_t(void);
+> 
+> 		//used when reading or saving data
+> 		void setData(uint32_t _data) final{}
+> 		uint32_t getData(void) final { return 0; }
+> 		//used when in menuList
+> 		void printSlot(appui_menu_t::dispSlot_t _slot) final;
+> 		void directKeyOp(appVar_keyBTOp_t* _op) final;
+> 		//used when in menuItem
+> 		void printDisp(void) final;
+> 		void keyOp(appVar_keyBTOp_t* _op) final;
+> 	};
+> ```
+>
+> 上面我创建了四种菜单项类型：子菜单类型、整形参数类型、浮点参数类型、函数调用类型。
 
 
 
@@ -1215,15 +1209,27 @@ APP软件通常面向DRV层或APP自身的内部组件工作。对于智能车�
 
 1. 定时中断管理器（PITMGR）
 
+   
+
 2. 外部中断管理器（EXTMGR）
+
+   
 
 3. 串口管理器（UARTMGR）
 
+   
+
 4. I2C通用接口与SPI通用接口
 
-5. 电机与舵机驱动接口
+   
+
+5. 电机与舵机驱动接口（MOTOR/SERVO）
+
+   
 
 6. IMU惯导驱动接口（DRVIMU）
+
+   
 
 7. 显示屏幕接口（DISP）
 
@@ -1234,17 +1240,38 @@ APP软件通常面向DRV层或APP自身的内部组件工作。对于智能车�
 #### 3.2. 应用软件层框架
 
 1. 顶层MVC框架
+
+   
+
 2. 数据存储框架
+
+   
+
 3. 控制状态机框架
+
+   
+
 4. NV存储接口（NVSTO）
+
+   
+
 5. 界面显示适配器（APPUI）
+
+   
+
 6. 菜单逻辑接口（APPUI_MENU）
+
+   
+
 7. 日志与命令行接口（APPUI_DLOG）
+
+   
+
 8. 图像显示接口（APPUI_IMAGE）
+
+   
+
 9. 通用数传接口
-10. 双车通讯接口（基于通用数传接口i）
-11. 上位机通讯接口（基于通用数传接口）
-12. 
 
 
 
