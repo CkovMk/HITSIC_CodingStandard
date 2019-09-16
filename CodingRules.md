@@ -1160,6 +1160,8 @@ RTE提供了对基础外设（如PIT、DMA、XBAR、AOI等设备）的初始化�
 
 一部分RTE内容直接由NXP MCUXpresso实现，无需自行编写。
 
+RTE还提供初始化注册的功能，任何硬件初始化都应在RTE内置位对应标志位。
+
 
 
 #### 1.3. 系统驱动层（DRV）
@@ -1206,7 +1208,130 @@ APP软件通常面向DRV层或APP自身的内部组件工作。对于智能车�
 
 1. 定时中断管理器（PITMGR）
 
-   
+   - 概述
+
+     定时中断管理器的模块名为PITMGR，包括两个文件，`pitmgr.hpp`和`pitmgr.cpp`。
+
+     定时中断管理器属于驱动系统层的系统部分，主要通过PIT硬件计时，向系统提供全寿命计时器（Lifetime Counter，LTC）、精准延迟计时、定时任务管理等功能。PIT硬件在PITMGR中初始化和配置。通常情况下配置如下：Chnl0和Chnl1通过ChainMode连接成一个64位定时器，作为LTC。NXP非常贴心地在SDK中为我们准备了读取LTC的函数`uint64_t PIT_GetLifetimeTimerCount(PIT_Type* base);`，可以直接调用。这个LTC同时用作延时功能。Chnl2配置为定时周期为1ms的定时器，开启中断，为系统服务提供节拍。Chnl3按需配置。
+
+   - C语言接口
+
+     `const uint64_t pitmgr_pitClkFreq;` 常量，定义了PIT时钟频率，需要根据具体单片机的时钟配置修改。
+
+     `status_t PITMGR_Init(void);` PIT初始化与配置。
+
+     `uint64_t getLTC(void);`	获取LTC计数。**注意：PIT是自动重装减法计数器。**需要用`ULLONG_MAX-PIT_GetLifetimeTimerCount(PIT);`得到从0开始的计数。
+
+     `uint64_t getLTC_us(void);` 获取LTC计数的微秒数。
+
+     `uint64_t getLTC_ms(void);` 获取LTC计数的毫秒数。
+
+     `void delay(uint64_t _t);` 通过LTC进行时钟级别的延时。
+
+     `void delay_us(uint64_t _t);` 通过LTC进行微秒级延时。
+
+     `void delay_ms(uint64_t _t);` 通过LTC进行毫秒级延时。
+
+     `typedef void (*pitmgr_handler_t)(void);` 定时任务函数指针。
+
+     ```c
+     enum pptFlag_t : uint32_t
+     {
+     	pitmgr_pptEnable = 1 << 0,
+     	pitmgr_pptRunOnce = 1 << 1,
+     };
+     ```
+
+     标志位枚举，PIT系统中断服务的属性flag。`enable`指当前任务的启用状态，`runOnce`指该任务是否运行一次后自动禁用。还可按需添加更多flag。
+
+     
+
+     ```c
+     struct pitmgr_handle_t
+     {
+     	uint32_t ms, mso;
+     	pitmgr_handler_t handler;
+     	uint32_t pptFlag;
+     };
+     ```
+
+     任务控制结构体。其中`ms`表示运行周期，`mso`表示运行相位（通俗讲就是该任务会在第`k*ms+mso`毫秒时被执行）。该机制是用于平衡每一个毫秒的负载。假如A任务每2ms运行一次，用时20us，B任务每5ms运行一次，用时100us，则第10毫秒共用时120us。如果这样的累积事件越累越多，有可能导致在特定的节拍处用时超过1ms的定时周期，导致定时周期的不稳定。`handler`用于存储任务的函数指针，`pptFlag`用于存储前面enum所定义的属性flag。
+
+     
+
+     `const uint32_t pitmgr_isrSetSize;` 简单起见，这里不再对系统定时中断服务的数组采用动态内存，而是简单定义一个绝对够用大小。
+
+     `uint32_t pitmgr_isrSetCnt;` 这个变量用于存储当前系统定时中断服务数组中系统定时中断的个数。
+
+     `pitmgr_handle_t pitmgr_isrSet[pitmgr_isrSetSize];` 这就是系统定时中断服务数组了。
+
+     `uint32_t pitmgr_timer_ms;` 这是PIT中断的毫秒计时变量。亦可在`isr`函数内静态定义。
+
+     `void PITMGR_setup(pitmgr_handle_t* _handle, uint32_t _ms, uint32_t _mso, handler_t _handler, uint32_t _ppt);` 这是一个内部函数，用于设置一个handle。
+
+     `void PITMGR_setEnable(pitmgr_handle_t* _handle, uint8_t _b)` 这是一个内部函数，用于设置一个handle的启用状态。这里uint8_t实际用作bool，因为C语言没有原生的bool（我不喜欢boolean）。
+
+     `pitmgr_handle_t* PITMGR_Insert(uint32_t _ms, uint32_t _mso, handler_t _handler, uint32_t _ppt);` 如果数组未满，这个函数用于向数组末尾插入一个系统定时中断服务，它会使`pitmgr_isrSetCnt`增加1，并返回指向所插入的`pitmgr_handle_t`结构体的指针。如果数组已满，（在DEBUG配置下）应当`assert`失败，并（在RELEASE配置下）返回`NULL`。注：性能考虑，`assert`在RELEASE配置下往往被忽略。**注意：该函数需要暂时关闭PIT中断。**
+
+     `status_t PITMGR_Remove(pitmgr_handle_t* _handle );` 该函数为可选函数，用于删除一个特定的系统定时中断任务。由于采用了数组的存储方式，删除非末尾的节点可能存在困难。该函数返回操作的结果。对于需要频繁开关的系统定时中断任务，建议使用`pptFlag`设置启用和禁用，而不是反复添加和删除任务。
+
+     `void PITMGR_Isr(void);` 该函数为本模块的中断处理函数，中断服务函数将调用此函数来实现对系统定时中断任务的处理。此函数用于处理PITMGR内部的业务逻辑，而并不负责清除PIT硬件的标志位。标志位由PIT的IRQHandler清除。
+
+     
+
+   - C++接口
+
+     ```c++
+class pitmgr_t
+     {
+     public:
+     
+     	//LifeTimeCounter
+     	static uint64_t getLTC(void);
+     	static uint64_t getLTC_us(void);
+     	static uint64_t getLTC_ms(void);
+     	//delay using LifeTimeCounter
+     	static void delay(uint64_t _t);
+     	static void delay_us(uint64_t _t);
+     	static void delay_ms(uint64_t _t);
+     
+     	//isr service manager
+     	typedef void (*handler_t)(void);
+     	enum pptFlag_t : uint32_t
+     	{
+     		enable = 1 << 0,
+     		runOnce = 1 << 1,
+     		//msgWake = 1 << 2,
+     	};
+     	static std::list<pitmgr_t> isrSet;
+     	static uint32_t timer_ms;
+     
+     	static pitmgr_t& insert(uint32_t _ms, uint32_t _mso, handler_t _handler, uint32_t _ppt);
+         static status_t remove(pitmgr_t& _handle);
+     	static void isr(void);
+     
+     	//isr service content
+     	uint32_t ms, mso;
+     	handler_t handler;
+     	uint32_t pptFlag;
+     
+     	void setup(uint32_t _ms, uint32_t _mso, handler_t _handler, uint32_t _ppt);
+     	void setEnable(bool _b);
+     	pitmgr_t(void);
+     private:
+     
+     	pitmgr_t(uint32_t _ms, uint32_t _mso, handler_t _handler, uint32_t _ppt);
+     
+     };
+     ```
+     
+     
+     
+     
+     
+     
+
+ 
 
 2. 外部中断管理器（EXTMGR）
 
