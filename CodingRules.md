@@ -1217,7 +1217,7 @@ APP软件通常面向DRV层或APP自身的内部组件工作。对于智能车�
 
      定时中断管理器属于驱动系统层的系统部分，主要通过PIT硬件计时，向系统提供全寿命计时器（Lifetime Counter，LTC）、精准延迟计时、定时任务管理等功能。PIT硬件在PITMGR中初始化和配置。通常情况下配置如下：Chnl0和Chnl1通过ChainMode连接成一个64位定时器，作为LTC。NXP非常贴心地在SDK中为我们准备了读取LTC的函数`uint64_t PIT_GetLifetimeTimerCount(PIT_Type* base);`，可以直接调用。这个LTC同时用作延时功能。Chnl2配置为定时周期为1ms的定时器，开启中断，为系统服务提供节拍。Chnl3按需配置。
 
-   - C语言接口
+   - C语言实现
 
      `const uint64_t pitmgr_pitClkFreq;` 常量，定义了PIT时钟频率，需要根据具体单片机的时钟配置修改。
 
@@ -1282,7 +1282,7 @@ APP软件通常面向DRV层或APP自身的内部组件工作。对于智能车�
 
      
 
-   - C++接口
+   - C++实现
 
      ```c++
 class pitmgr_t
@@ -1338,11 +1338,16 @@ class pitmgr_t
 
 2. 外部中断管理器（EXTMGR）
 
+   - 概述
+   - C语言实现
+   - C++实现
+
    
 
 3. 串口管理器（UARTMGR）
 
-   
+   - 概述
+   - C++实现
 
 4. I2C通用接口与SPI通用接口
 
@@ -1353,6 +1358,18 @@ class pitmgr_t
    
 
 6. IMU惯导驱动接口（DRVIMU）
+
+   - 概述
+
+     
+
+   - C语言实现
+
+     
+
+   - C++实现
+
+     
 
    
 
