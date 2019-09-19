@@ -1339,77 +1339,197 @@ class pitmgr_t
 2. 外部中断管理器（EXTMGR）
 
    - 概述
-   - C语言实现
+
+     外部中断管理器为每个引脚或每组引脚提供独立的中断服务。由于系统中需要用到外部中断的数量有限，为每个引脚单独开辟一块内存似乎不妥，因而这里采用C++STL的`set`构建数据结构。由于`set`的原理涉及到红黑树等复杂知识，这里不再提供C语言实现。
+
    - C++实现
+
+     ```c++
+     class extInt_t
+     {
+     public:
+     	typedef void (*handler_t)(void);
+     
+     	static std::map<uint32_t, std::map<uint32_t, extInt_t>> isrSet;
+     	static extInt_t& insert(GPIO_Type* _gpio, uint32_t _pin, handler_t _handler, gpio_interrupt_mode_t _mode, bool _enable);
+     	static void isr(GPIO_Type* _gpio);
+     
+     	GPIO_Type* gpio;
+     	uint32_t pin;
+     	handler_t handler;
+     	gpio_interrupt_mode_t mode;
+     
+     	void setup(GPIO_Type* _gpio, uint32_t _pin, handler_t _handler, gpio_interrupt_mode_t _mode, bool _enable);
+     
+     	void setMode(gpio_interrupt_mode_t _mode);
+     	void setEnable(bool b);
+     	extInt_t(void);
+     private:
+     	
+     	extInt_t(GPIO_Type* _gpio, uint32_t _pin, handler_t _handler, gpio_interrupt_mode_t _mode, bool _enable);
+     };
+     ```
+
+     这是在I.MX RT1052上的实现。如要在Kinetis系列单片机上实现，需要对一些内部类型做适当的替换。
 
    
 
 3. 串口管理器（UARTMGR）
 
    - 概述
-   - C++实现
-
-4. I2C通用接口与SPI通用接口
-
-   
-
-5. 电机与舵机驱动接口（MOTOR/SERVO）
-
-   对于大多数系统，电机和舵机的PWM频率都可以单独控制。而多数时候，我们希望系统中的若干电机能够同时更新，以免电机更新时间不同造成控制偏差。而频繁地更新PWM寄存器也会造成波形失真，进而导致抖动。
-
-   对于连接在同一PWM定时器（这里PWM定时器为广义含义，指一组用于产生PWM信号、共用一组LD/TR信号的PWM通道）上的所有电机，提供如下接口：
-
-   `status_t MOTOR_pwmWrite(int16_t _l, int16_t _r);` 用于更新电机PWM值，但不更新PWM寄存器。如果有多个电机，参数的数量同步增加。
-   `void MOTOR_pwmUpdate(void);` 用于更新PWM寄存器。
-
-   
-
-   舵机接口同理。
-
-   
-
-   
-
-6. IMU惯导驱动接口（DRVIMU）
-
-   - 概述
-
-     
-
-   - C语言实现
-
-     
 
    - C++实现
 
+     ```c++
+class uartMgr_t
+     {
+     public:
+     	static uartMgr_t& getInst(LPUART_Type* instNum)
+     	{
+     		static uartMgr_t dbugInst(LPUART1);
+     		static uartMgr_t wlanInst(LPUART4);
+     		static uartMgr_t intcInst(LPUART5);
+     		switch ((uint32_t)instNum)
+     		{
+     		case LPUART1_BASE:
+     			return dbugInst;
+     			break;
+     		case LPUART4_BASE:
+     			return wlanInst;
+     			break;
+     		case LPUART5_BASE:
+     			return intcInst;
+     			break;
+     		default:
+     			return dbugInst;
+     			break;
+     		}
+     		return dbugInst;
+     	}
+     	enum pptFlag_t : uint8_t
+     	{
+     		txBusy = 1 << 0,
+     		rxBusy = 1 << 1,
+     		tp_enable = 1 << 2,
+     		tp_rxHead = 1 << 3,
+     	};
+     
+     	//controll varible
+     	uint8_t pptFlag;
+     	bool avail;	//available, mutex...
+     
+     	//raw uart transfer
+     	LPUART_Type* base;
+     	lpuart_handle_t txIntrHandle, rxIntrHandle;
+     	uint32_t rxIntrCnt;
+     
+     	//transfer protocal
+     	uint8_t* tpDataBuf;
+     	typedef void (*tpDataHandler_t)(uint8_t* dataBuf, int32_t size);
+     	tpDataHandler_t tpHandler;
+     
+     
+     
+     	status_t txPoll(uint8_t* data, uint32_t size);
+     	status_t rxPoll(uint8_t* data, uint32_t size);
+     	int32_t uprintf(const char* _fmt, ...)
+     	{
+     		va_list args;
+     		va_start(args, _fmt);
+     		static char strBuf[256];
+     		int32_t len = vsnprintf(strBuf, 256, _fmt, args);
+     		if(len > 0)
+     		{
+     			txPoll((uint8_t*)strBuf, len);
+     		}
+     		return len;
+     	}
+     	status_t txIntr(uint8_t* data, uint32_t size, lpuart_transfer_callback_t callback, void* userData);
+     	static void defaultCallback(LPUART_Type* base, lpuart_handle_t* handle, status_t status, void* userData);
+     	void txIntrAbort(void);
+     	status_t rxIntr(uint8_t* data, uint32_t size, lpuart_transfer_callback_t callback, void* userData);
+     	void rxIntrAbort(void);
+     	status_t tpModeSetup(uint8_t* dataBuf, tpDataHandler_t handler);
+     	static void tp_defaultcallback(LPUART_Type* base, lpuart_handle_t* handle, status_t status, void* userData);
+     	void tp_txIntr(uint8_t* data, uint32_t size);
+     
+     
+     
+     
+     private:
+     
+     	uartMgr_t(LPUART_Type* _base)
+     	{
+     		base = _base;
+     		pptFlag = 0;
+     	}
+     };
+     
+     ```
+     
+     这是
      
 
-   
 
-7. 显示屏幕接口（DISP）
 
-   通常，单片机对MCU屏的驱动可分为两种：命令式和缓存式。它们的区别在于是否在本地内存保留完整的显示内容副本。命令式驱动直接操作显示屏内的寄存器存储，速度极慢但占用内存极少。缓存式在绘图时仅更新内存，绘制完成后一次性将内存中的内容写入显示屏内的寄存器。缓存式又分为单缓存（全缓存）和双缓存两种：单缓存每次刷新都需要写入整帧图像，而双缓存则仅更新变化的部分。不过由于DMA的存在，单缓存比双缓存的应用更加广泛。
+4. 电机与舵机驱动接口（MOTOR/SERVO）
 
-   显示屏内部往往可以配置图像寄存器的使用方式，我们可以按需将其配置为按行扫描、按列扫描等不同方式；屏幕的种类也各异：有黑白单色屏幕、灰阶单色屏幕、彩色屏幕等；其寄存器配置也各有千秋。这些使用的灵活性和多样性，使得构建一套适用于所有屏幕的接口变得极为困难。我们只能限制使用屏幕的种类，以尽可能规避这一问题。目前我们使用的黑白单色显示屏为SSD1306芯片驱动的128 * 64 OLED显示屏，彩色屏幕计划使用ST7789芯片驱动的240 * 240 LCD屏幕。
+  对于大多数系统，电机和舵机的PWM频率都可以单独控制。而多数时候，我们希望系统中的若干电机能够同时更新，以免电机更新时间不同造成控制偏差。而频繁地更新PWM寄存器也会造成波形失真，进而导致抖动。
 
-   无论何种显示屏，如果以单缓存方式工作，只需提供下列函数（函数签名按需）：
+  对于连接在同一PWM定时器（这里PWM定时器为广义含义，指一组用于产生PWM信号、共用一组LD/TR信号的PWM通道）上的所有电机，提供如下接口：
 
-   ```c++
-   DISP_Init
-   DISP_DrawPixel
-   DISP_Fill
-   DISP_UpdateBuffer
-   ```
+  `status_t MOTOR_pwmWrite(int16_t _l, int16_t _r);` 用于更新电机PWM值，但不更新PWM寄存器。如果有多个电机，参数的数量同步增加。
+  `void MOTOR_pwmUpdate(void);` 用于更新PWM寄存器。
 
-   字体LUT、图片资源等数据不属于显示屏接口管理的范围，应该由上层应用处理。
 
-   
 
-8. 内存管理接口
+  舵机接口同理。
 
-9. 系统日志接口
 
-10. 系统消息管理器
+
+
+
+5. IMU惯导驱动接口（DRVIMU）
+
+- 概述
+
+  
+
+- C语言实现
+
+  
+
+- C++实现
+
+  
+
+
+
+6. 显示屏幕接口（DISP）
+
+  通常，单片机对MCU屏的驱动可分为两种：命令式和缓存式。它们的区别在于是否在本地内存保留完整的显示内容副本。命令式驱动直接操作显示屏内的寄存器存储，速度极慢但占用内存极少。缓存式在绘图时仅更新内存，绘制完成后一次性将内存中的内容写入显示屏内的寄存器。缓存式又分为单缓存（全缓存）和双缓存两种：单缓存每次刷新都需要写入整帧图像，而双缓存则仅更新变化的部分。不过由于DMA的存在，单缓存比双缓存的应用更加广泛。
+
+  显示屏内部往往可以配置图像寄存器的使用方式，我们可以按需将其配置为按行扫描、按列扫描等不同方式；屏幕的种类也各异：有黑白单色屏幕、灰阶单色屏幕、彩色屏幕等；其寄存器配置也各有千秋。这些使用的灵活性和多样性，使得构建一套适用于所有屏幕的接口变得极为困难。我们只能限制使用屏幕的种类，以尽可能规避这一问题。目前我们使用的黑白单色显示屏为SSD1306芯片驱动的128 * 64 OLED显示屏，彩色屏幕计划使用ST7789芯片驱动的240 * 240 LCD屏幕。
+
+无论何种显示屏，如果以单缓存方式工作，只需提供下列函数（函数签名按需）：
+
+```c++
+DISP_Init
+DISP_DrawPixel
+DISP_Fill
+DISP_UpdateBuffer
+```
+
+字体LUT、图片资源等数据不属于显示屏接口管理的范围，应该由上层应用处理。
+
+
+
+
+6. 内存管理接口（SYSRAM）
+
+7. 系统日志接口（SYSLOG）
+
+8. 系统消息管理（SYSMSG）
 
 
 
