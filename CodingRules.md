@@ -1875,8 +1875,6 @@ public:
    
    ```
 
->>>>>>> Edit-StructureRules
-
 
 
 
