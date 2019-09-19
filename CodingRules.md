@@ -1507,9 +1507,9 @@ class uartMgr_t
 
 6. 显示屏幕接口（DISP）
 
-  通常，单片机对MCU屏的驱动可分为两种：命令式和缓存式。它们的区别在于是否在本地内存保留完整的显示内容副本。命令式驱动直接操作显示屏内的寄存器存储，速度极慢但占用内存极少。缓存式在绘图时仅更新内存，绘制完成后一次性将内存中的内容写入显示屏内的寄存器。缓存式又分为单缓存（全缓存）和双缓存两种：单缓存每次刷新都需要写入整帧图像，而双缓存则仅更新变化的部分。不过由于DMA的存在，单缓存比双缓存的应用更加广泛。
+ 通常，单片机对MCU屏的驱动可分为两种：命令式和缓存式。它们的区别在于是否在本地内存保留完整的显示内容副本。命令式驱动直接操作显示屏内的寄存器存储，速度极慢但占用内存极少。缓存式在绘图时仅更新内存，绘制完成后一次性将内存中的内容写入显示屏内的寄存器。缓存式又分为单缓存（全缓存）和双缓存两种：单缓存每次刷新都需要写入整帧图像，而双缓存则仅更新变化的部分。不过由于DMA的存在，单缓存比双缓存的应用更加广泛。
 
-  显示屏内部往往可以配置图像寄存器的使用方式，我们可以按需将其配置为按行扫描、按列扫描等不同方式；屏幕的种类也各异：有黑白单色屏幕、灰阶单色屏幕、彩色屏幕等；其寄存器配置也各有千秋。这些使用的灵活性和多样性，使得构建一套适用于所有屏幕的接口变得极为困难。我们只能限制使用屏幕的种类，以尽可能规避这一问题。目前我们使用的黑白单色显示屏为SSD1306芯片驱动的128 * 64 OLED显示屏，彩色屏幕计划使用ST7789芯片驱动的240 * 240 LCD屏幕。
+ 显示屏内部往往可以配置图像寄存器的使用方式，我们可以按需将其配置为按行扫描、按列扫描等不同方式；屏幕的种类也各异：有黑白单色屏幕、灰阶单色屏幕、彩色屏幕等；其寄存器配置也各有千秋。这些使用的灵活性和多样性，使得构建一套适用于所有屏幕的接口变得极为困难。我们只能限制使用屏幕的种类，以尽可能规避这一问题。目前我们使用的黑白单色显示屏为SSD1306芯片驱动的128 * 64 OLED显示屏，彩色屏幕计划使用ST7789芯片驱动的240 * 240 LCD屏幕。
 
 无论何种显示屏，如果以单缓存方式工作，只需提供下列函数（函数签名按需）：
 
@@ -1527,9 +1527,28 @@ DISP_UpdateBuffer
 
 6. 内存管理接口（SYSRAM）
 
+   C++实现：
+
+   ```c++
+   
+   ```
+   
 7. 系统日志接口（SYSLOG）
 
+   C++实现：
+
+   ```c++
+   
+   ```
+   
 8. 系统消息管理（SYSMSG）
+
+   C++实现：
+
+   ```c++
+   
+   ```
+   
 
 
 
@@ -1537,35 +1556,322 @@ DISP_UpdateBuffer
 
 #### 3.2. 应用软件层框架
 
-2. 数据存储框架
+1. 控制状态机框架
+
+   C++实现：
+
+   ```c++
+   
+   ```
 
    
 
-3. 控制状态机框架
+2. NV存储接口（NVSTO）
+
+   C++实现：（待定）
+
+   ```c++
+   class appui_dataIO_t
+   {
+public:
+   	static appui_dataIO_t& getInstance(void)
+   	{
+   		static appui_dataIO_t inst;
+   		return inst;
+   	}
+   
+   	void fill(void)；
+   	bool read(uint32_t _addr, uint32_t _cnt, void* _buf)；
+   	bool save(uint32_t _addr, uint32_t _cnt, void* _buf)；
+   
+   private:
+   	appui_dataIO_t(void)；
+   };
+   ```
+   
+   
+
+
+3. 数据存储框架
+
+   C++实现：
+
+   ```c++
+   
+   ```
 
    
 
-4. NV存储接口（NVSTO）
+4. 界面显示适配器（APPUI_DISP）
+
+   C++实现：
+
+   ```c++
+   class appui_disp_t
+   {
+   public:
+   	static appui_disp_t& getInstance(void)
+   	{
+   		static appui_disp_t inst;
+   		return inst;
+   	}
+   	typedef uint32_t dispSize_t;
+   
+   	gnc_rgbLcdBuf_t dispBuf;// = *(new gnc_rgbLcdBuf_t);
+   	
+   	void disp_update(void);
+   	//set one pixel on dispBuf
+   	void setPixel(dispSize_t r, dispSize_t c, gnc_rgb_t color) { dispBuf.pix[r][c] = color; }
+   	//print one char on dispBuf, (r,c) is Top_Left_Corner.
+   	void dispPutchar(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char ch);
+   	//write string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner.
+   	void dispPrint(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* str);
+   	//write formatted string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner.
+   	void dispPrintf(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* _fmt, ...);
+   	//write string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15.
+   	void rowPrint(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* str);
+   	//write formatted string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15.
+   	void rowPrintf(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* _fmt, ...);
+   
+   	//print one char on dispBuf, (r,c) is Top_Left_Corner. OverLay.
+   	void dispPutchar(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, const char ch);
+   	//write string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner. OverLay.
+   	void dispPrint(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, const char* str);
+   	//write formatted string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner. OverLay.
+   	void dispPrintf(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, const char* _fmt, ...);
+   	//write string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15. OverLay.
+   	void rowPrint(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, const char* str);
+   	//write formatted string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15. OverLay.
+   	void rowPrintf(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, const char* _fmt, ...);
+   
+   	void dispFillRectangle(dispSize_t r1, dispSize_t r2, dispSize_t c1, dispSize_t c2, gnc_rgb_t b_color);
+   	void dispDrawRectangle(dispSize_t r1, dispSize_t r2, dispSize_t c1, dispSize_t c2, dispSize_t thick, gnc_rgb_t b_color);
+   
+   
+   
+   
+   private:
+   	appui_disp_t(void) {}
+   	appui_disp_t(const appui_disp_t&);
+   	appui_disp_t& operator = (const appui_disp_t&);
+   
+   };
+   ```
 
    
 
-5. 界面显示适配器（APPUI_DISP）
+5. 菜单逻辑接口（APPUI_MENU）
+
+   C++实现：
+
+   ```c++
+   //menu
+   class appui_menu_t
+   {
+   public:
+   
+   	static const uint32_t name_strSize = 24;
+   
+   	class dispSlot_t
+   	{
+   	public:
+   		appui_disp_t::dispSize_t slotNum;
+   		dispSlot_t(appui_disp_t::dispSize_t _slot) : slotNum(_slot){}
+   		void slotNamePrintf(gnc_rgb_t f_color, gnc_rgb_t b_color, char* _fmt, ...);
+   		void slotDataPrintf(gnc_rgb_t f_color, gnc_rgb_t b_color, char* _fmt, ...);
+   		void erase(void);
+   	};
+   
+   	struct menuItemIdex_t
+   	{
+   		static const uint8_t globalHead = 0xaf, regionHead = 0xa0;
+   
+   		uint8_t head;
+   		uint8_t type;
+   		char nameStr[name_strSize];
+   		uint8_t strSum[2];	// DO NOT CARE at present.
+   
+   		bool operator== (const menuItemIdex_t& a)const;
+   		bool operator >(const menuItemIdex_t& a)const;
+   		bool operator <(const menuItemIdex_t& a)const;
+   	};
+   
+   	struct menuItemSaver_t
+   	{
+   		menuItemIdex_t index;
+   		uint32_t data;
+   
+   		bool operator== (const menuItemSaver_t& a)const;
+   	};
+   
+   	class menuItemIfce_t;
+   
+   	//UI Menu menuList
+   	class menuList_t
+   	{
+   	public:
+   		static const uint32_t slotPerScreen = 8;
+   		//static const uint32_t name_strSize = 24;
+   		std::vector<menuItemIfce_t*> menu;
+   		uint32_t disp_p, slct_p;
+   		std::string nameStr;
+   		menuList_t* prev;
+   
+   		menuList_t(std::string _nameStr, menuList_t* _prev);
+   		~menuList_t(void);
+   		void insert(appui_menu_t::menuItemIfce_t* item);
+   		void printDisp(void);
+   		void keyOp(appVar_keyBTOp_t* _op);
+   
+   	};
+   
+   	//UI Menu menuItem interface
+   	class menuItemIfce_t
+   	{
+   	public:
+   		enum type_t : uint8_t
+   		{
+   			nullType,
+   			variType,
+   			varfType,
+   			procType,
+   			menuType,
+   		};
+   		enum message_t : uint32_t
+   		{
+   			selected,
+   			deselected,
+   			dataUpdate,
+   		};
+   		enum propety_t : uint32_t
+   		{
+   			//data config
+   			data_global = 1 << 0,	//data save in global area
+   			data_region = 1 << 1,	//data save in regional area
+   			data_getPos = data_global | data_region,
+   			data_ROFlag = 1 << 2,	//data read only
+   			data_prioRW = 1 << 3,	//data rw prior than other item
+   			data_getCfg = data_global | data_region | data_ROFlag | data_prioRW,
+   
+   			//error mask
+   		};
+   		typedef void (*slotFunction_t)(menuItemIfce_t* _this, message_t _msg);
+   		//static const uint32_t name_strSize = 24;
+   		static uint32_t itemCnt;
+   
+   
+   		type_t type;
+   		menuList_t* myList;
+   		uint32_t pptFlag;	//property flag
+   		uint32_t list_id, unique_id;
+   		std::string nameStr;
+   		slotFunction_t slotFunc;
+   		/*
+   		 * Configure by Constructor Default:
+   		 *     type,unique_id,slotFunc
+   		 * Configure by Constructor Parameter:
+   		 *     pptFlag,nameStr,(*data)
+   		 * Configure by menuList insert() Default:
+   		 *     myList,list_id,
+   		 *
+   		 */
+   
+   		virtual void installSlotFunction(slotFunction_t _func) final { slotFunc = _func; }
+   		virtual void uninstallSlotFunction(void) final { slotFunc = NULL; }
+   		virtual void slotCall(message_t _msg) final
+   		{
+   			if (slotFunc != NULL) { (*slotFunc)(this, _msg); }
+   		}
+   		//used when reading or saving data
+   		virtual uint32_t getData(void) = 0;
+   		virtual void setData(uint32_t _data) = 0;
+   		virtual bool getIndex(menuItemIdex_t* _data) final;
+   		//used when in menuList
+   		virtual void printSlot(appui_menu_t::dispSlot_t _slot) = 0;
+   		virtual void directKeyOp(appVar_keyBTOp_t * _op) = 0;
+   		//used when in menuItem
+   		virtual void printDisp(void) = 0;
+   		virtual void keyOp(appVar_keyBTOp_t * _op) = 0;
+   	};
+   	//End of UI Menu menuItem interface
+   
+   	//UI Menu menuItem menuEntry_type
+   	class menuItem_menuType_t : public menuItemIfce_t
+   	{
+   	public:
+   		menuList_t* data;
+   		menuItem_menuType_t(menuList_t* _data, std::string _nameStr, uint32_t _pptFlag);
+   		~menuItem_menuType_t(void);
+   		//used when reading or saving data
+   		void setData(uint32_t _data) final{}
+   		uint32_t getData(void) final { return  0;/* (uint32_t)data;*/ }
+   		//used when in menuList
+   		void printSlot(appui_menu_t::dispSlot_t _slot) final;
+   		void directKeyOp(appVar_keyBTOp_t* _op) final;
+   		//used when in menuItem
+   		void printDisp(void) final;
+   		void keyOp(appVar_keyBTOp_t* _op) final;
+   	};
+       //End of UI Menu menuItem menuEntry_type
+   	
+   	//static definitions
+   	menuList_t* currList;
+   	menuItemIfce_t* currItem;
+   	const uint8_t saveRegionCnt = 5;
+   	int32_t currRegionNum;
+   
+   	const uint32_t globalAddrOffset = 0;
+   	const uint32_t regionAddrOffset[5] = {32768,65536,98304,131072,163840};
+   	
+   	//general definitions
+   	menuList_t rootMenu = menuList_t(std::string("#RootMenu#"), &rootMenu);
+   
+   	static appui_menu_t& getInstance(void);
+   
+   
+   	menuList_t menuTest = menuList_t(std::string("#MenuTest#"), &rootMenu);
+   
+   	void printDisp(void);
+   	void keyOp(appVar_keyBTOp_t* _op);
+   
+   	void dataSave(void);
+   	void dataRead(void);
+   
+   	private:
+   	appui_menu_t(void);
+   	~appui_menu_t(void){}
+   };
+   ```
 
    
 
-6. 菜单逻辑接口（APPUI_MENU）
+6. 日志与命令行接口（APPUI_DLOG）
+
+   C++实现：
+
+   ```c++
+   
+   ```
 
    
 
-7. 日志与命令行接口（APPUI_DLOG）
+7. 图像显示接口（APPUI_IMGE）
+
+   C++实现：
+
+   ```c++
+   
+   ```
 
    
 
-8. 图像显示接口（APPUI_IMGE）
+8. 通用数传接口（APPCOM）
 
+   C++实现：
+
+   ```c++
    
-
-9. 通用数传接口
+   ```
 
 
 
