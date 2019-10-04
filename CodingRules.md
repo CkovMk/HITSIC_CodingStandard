@@ -1469,7 +1469,7 @@ class uartMgr_t
      
      ```
      
-     这是
+     这是在I.MX RT1052上的实现。如要在Kinetis系列单片机上实现，需要对一些内部类型做适当的替换。
      
 
 
@@ -1537,8 +1537,10 @@ DISP_UpdateBuffer
    
 7. 系统日志接口（SYSLOG）
 
-   C++实现：
+   拟使用Boost日志
 
+   C++实现：
+   
    ```c++
    
    ```
@@ -1550,7 +1552,7 @@ DISP_UpdateBuffer
    ```c++
    
    ```
-   
+
 
 
 
@@ -1559,6 +1561,8 @@ DISP_UpdateBuffer
 #### 3.2. 应用软件层框架
 
 1. 控制状态机框架
+
+   拟采用Boost状态机，或者自己写
 
    C++实现：
 
@@ -1575,7 +1579,7 @@ DISP_UpdateBuffer
    ```c++
    class appui_dataIO_t
    {
-public:
+   public:
    	static appui_dataIO_t& getInstance(void)
    	{
    		static appui_dataIO_t inst;
@@ -1590,7 +1594,7 @@ public:
    	appui_dataIO_t(void)；
    };
    ```
-   
+
    
 
 
@@ -1848,6 +1852,8 @@ public:
    
 
 6. 日志与命令行接口（APPUI_DLOG）
+
+   直接对接boost日志
 
    C++实现：
 
