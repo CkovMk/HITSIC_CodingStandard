@@ -1395,7 +1395,7 @@ class pitmgr_t
    - C++实现
 
      ```c++
-class uartMgr_t
+class uartmgr_t
      {
      public:
      	static uartMgr_t& getInst(LPUART_Type* instNum)
@@ -1472,7 +1472,7 @@ class uartMgr_t
      
      private:
      
-     	uartMgr_t(LPUART_Type* _base)
+     	uartmgr_t(LPUART_Type* _base)
      	{
      		base = _base;
      		pptFlag = 0;
