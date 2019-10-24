@@ -16,47 +16,19 @@ by: C.M.    2019.09.20
 
 二、 变量
 
-​	2.1. 变量命名
-
-​		保留变量名
-
-​		一般命名
-
-​		前缀与后缀
-
-​	2.2. 变量的使用
-
-​		全局变量
-
-​		静态变量
-
-​		局部变量
-
-​		指针与引用
-
-​		常量与宏
-
-​		枚举类型
-
-​	2.3. 变量注释
-
 三、 表达式和语句
 
 四、 函数
 
-​	5.1. 保留函数命名
-
 五、 结构体与类
 
-六、 预编译指令
+六、 注释与文档
 
 七、 异常处理
 
-​	7.1. 通用异常处理
+八、 预编译指令
 
-​	7.2. C语言异常处理
-
-​	7.3. C++异常处理
+九、 生成控制
 
 
 
@@ -64,33 +36,9 @@ by: C.M.    2019.09.20
 
 一、 顶层架构
 
-​	1.1. 设计概述
-
-​	1.2. 运行时环境（RTE）
-
-​	1.3. 系统驱动层（DRV）
-
-​	1.4. 应用软件层（APP）
-
 二、 设计模式
 
-​	2.1. 单件模式
-
-​	2.2. 观察者模式
-
-​	2.3. 状态模式
-
-​	2.4. 命令模式
-
-​	2.5. 责任链模式
-
-​	2.6. 解释器模式
-
 三、 框架规范
-
-​	3.1. 驱动系统层接口
-
-​	3.2. 应用软件层框架
 
 ​	
 
@@ -148,9 +96,11 @@ C.M.@hit	2019.09.20
 
 ### 一、 头文件与源文件
 
+本章主要介绍C/C++语言头文件和源文件使用的规范。合理的文件规范不仅可以规避编译过程的各种包含问题，还有助于提高编译速度，提高开发效率。
+
 #### 1.1. 文件规范
 
-1. 所有文件必须采用UTF-8编码格式。
+1. 所有文件必须采用UTF-8编码格式，禁止在代码除注释以外的部分使用非ASCII字符。
 
 2. 文件命名以`所属层级`+`_`+`文件名主体`构成。有时还包括文件名后缀。文件名一律采用小写英文字符。
 
@@ -242,7 +192,66 @@ C.M.@hit	2019.09.20
 
    在所有其他头文件中第一个包含 `stdafx.h` 。
 
-8. 如果使用C++工程，建议使用C++编译器编译所有源文件（ `*.cpp` 和 `*.c` ）。需要使用C风格编译的代码须使用`extern 'C{}'` 修饰。
+8. 如果使用C++工程，建议使用C++编译器编译所有源文件（ `*.cpp` 和 `*.c` ）。需要使用C风格编译的代码须使用`extern "C"{}` 修饰。由于C编译器无法解析该语句，该语句需要额外的保护。
+
+   **注意：C++工程中链接时依赖命名正确的符号，必须按C语言编译。**
+
+   > 示例1
+   >
+   > ```c++
+   > #ifdef __cplusplus
+   > extern "C"{
+   > #endif
+   > 
+   > //	c code
+   > 
+   > #ifdef __cplusplus
+   > }
+   > #endif
+   > ```
+
+9. 头文件应具有包含保护（include guard）。包含保护可以是以下两种形式之一或兼有：使用 `#pramga once` 或使用宏定义形式的保护。该宏定义应采用开头、结尾和词间包含下划线、全部字母大写的命名方式。
+
+   >  示例1：
+   >
+   > ```c++
+   > /* appimg.hpp */
+   > #pragma once
+   > #ifnedf _APPIMG_HPP_
+   > #define _APPIMG_HPP_
+   > 
+   > // other code ...
+   > 
+   > #endif // ! _APPIMG_HPP_
+   > ```
+
+10. 包含目录应该尽可能精简，以节约编译器搜索头文件的时间。内部代码间的包含应该采用在`#include`语句中添加路径的方式。
+
+    > 示例1：
+    >
+    > 目录结构：
+    >
+    > ```c++
+    > .../main
+    >     |
+    >     --/drv
+    >     	|
+    >     	--/drv_oled.hpp
+    >     |
+    >     --app
+    >     	|
+    >     	--/app_ui.hpp
+    > ```
+    >
+    > 包含目录：`.../main`
+    >
+    > 包含代码：
+    >
+    > ```c++
+    > #include "drv/drv_oled.hpp"
+    > #include "app/app_ui.hpp"
+    > // ...
+    > ```
 
 
 
@@ -528,9 +537,13 @@ C.M.@hit	2019.09.20
 
 
 
-#### 2.3. 变量注释
+#### 2.3. 变量修饰
 
-
+1. const 常量修饰符
+2. static 静态修饰符
+3. volatile 易变修饰符
+4. register 寄存器修饰符
+5. align 内存对齐
 
 
 
@@ -546,7 +559,7 @@ C.M.@hit	2019.09.20
 
 #### 3.2. 条件语句
 
-1. if和switch-case语句必须覆盖变量的所有可能性。如果某些分支逻辑上永远不可能出现，使用`else`或`default:`分支以捕获异常。
+1. `if` 和 `switch-case` 语句必须覆盖变量的所有可能性。如果某些分支逻辑上永远不可能出现，使用`else`或`default:`分支以捕获异常。
 
 > 示例1：
 >
@@ -1129,7 +1142,7 @@ C.M.@hit	2019.09.20
 
 
 
-### 六、 预编译指令
+### 六、 注释与文档
 
 
 
@@ -1151,7 +1164,23 @@ C.M.@hit	2019.09.20
 
 #### 7.3. C++异常处理
 
-在C++程序中应避免使用`asssert`。C++有完善的异常处理功能，包括`throw`和`try...catch...`。在可能出现问题的代码处，如果判断出现问题，则调用`throw`语句抛出异常（exception）。可以抛出C++内置异常类型，也可以抛出自己定义的异常类型。如果上下文没有异常捕获语句`try...catch...`，throw的作用和assert相同，会终止程序。如果检测到了异常终止，可以加上异常捕获，然后在异常捕获中根据情况执行车模保护、故障信息输出等工作。处理结束后同样可以恢复现场，继续执行。
+在C++程序中应避免使用`assert`。C++有完善的异常处理功能，包括`throw`和`try...catch...`。在可能出现问题的代码处，如果判断出现问题，则调用`throw`语句抛出异常（exception）。可以抛出C++内置异常类型，也可以抛出自己定义的异常类型。如果上下文没有异常捕获语句`try...catch...`，throw的作用和assert相同，会终止程序。如果检测到了异常终止，可以加上异常捕获，然后在异常捕获中根据情况执行车模保护、故障信息输出等工作。处理结束后同样可以恢复现场，继续执行。
+
+
+
+
+
+### 八、 预编译指令
+
+
+
+
+
+
+
+### 九、 生成控制
+
+C/C++语言的生成包括主要包括预处理、编译和链接三个步骤，这些步骤与代码本身同样重要。本章主要介绍生成过程中的相关规范。
 
 
 
@@ -1161,7 +1190,7 @@ C.M.@hit	2019.09.20
 
 ## 第二部分 架构规范
 
-### 一、顶层架构
+### 一、 顶层架构
 
 #### 1.1. 设计概述
 
@@ -1179,9 +1208,11 @@ RTE还提供初始化注册的功能，任何硬件初始化都应在RTE内置�
 
 
 
-#### 1.3. 系统驱动层（DRV）
+#### 1.3. 系统驱动层（DRV/SYS）
 
 DRV层包括两个部分：系统组件和驱动组件。驱动组件主要提供对具体外设的访问，包括高级外设的初始化、读写操作、控制逻辑。对于一些常用的外设（如IMU，摄像头，电机等），DRV层还应提供统一的接口以供应用层访问。系统组件的功能主要包括：定时任务和事件触发器的管理，处理计时、延迟、中断路由等系统服务，提供异常处理、外部数传逻辑等相关功能。
+
+需要特别注意的是，系统驱动层不应包含面向具体硬件的低级初始化。系统驱动层的初始化面向功能，而不是面向硬件。如有必要，本层代码在初始化前，应先检查所需的底层硬件是否已完成初始化，如果没有，应抛出错误（DEBUG）或取消初始化（RELEASE）。
 
 和电脑上运行的操作系统一样，驱动和系统总是密不可分的，系统必须包含一些自身运行所必须的驱动。因而系统部分的代码往往会包含对所需外设的控制。这是一个介于单片机底层和上层逻辑之间的连接层。而独立于系统部分之外的驱动部分，则对系统部分有较高的依赖性，各种限制也较多。不同驱动之间禁止直接互相通信，而必须通过向系统注册观察者的方式接收通知；驱动层必须能够自动更新相关的数据，并产生对应的事件或消息。
 
@@ -1551,22 +1582,24 @@ DISP_UpdateBuffer
 
 6. 内存管理接口（SYSRAM）
 
-   C++实现：
+   在某些单片机中，内存不是完整的一块，而是根据速度和容量分为许多部分。在使用时，除去静态变量、C堆栈外的内存空间均需要手动管理。
 
-   ```c++
+   C++实现：直接使用 `Boost::pool` 。
    
-   ```
+   不提供C语言实现。
    
-7. 系统日志接口（SYSLOG）
+   
+   
+7. 系统日志接口（DLOG）
 
    拟使用Boost日志
 
    C++实现：
-   
+
    ```c++
    
    ```
-   
+
 8. 系统消息管理（SYSMSG）
 
    C++实现：
@@ -1584,20 +1617,16 @@ DISP_UpdateBuffer
 
 1. 控制状态机框架
 
-   拟采用Boost状态机，或者自己写
-
-   C++实现：
-
-   ```c++
-   
-   ```
+   不提供C语言实现。C++实现直接调用Boost库状态机。
 
    
 
 2. NV存储接口（NVSTO）
 
-   C++实现：（待定）
+   不提供C语言实现。
 
+   C++实现：（待定）
+   
    ```c++
    class appui_dataIO_t
    {
@@ -1614,81 +1643,16 @@ DISP_UpdateBuffer
    
    private:
    	appui_dataIO_t(void)；
-   };
+};
    ```
-
    
 
 
-3. 数据存储框架
 
-   C++实现：
 
-   ```c++
-   
-   ```
+1. 菜单逻辑接口（APPUI_MENU）
 
-   
-
-4. 界面显示适配器（APPUI_DISP）
-
-   C++实现：
-
-   ```c++
-   class appui_disp_t
-   {
-   public:
-   	static appui_disp_t& getInstance(void)
-   	{
-   		static appui_disp_t inst;
-   		return inst;
-   	}
-   	typedef uint32_t dispSize_t;
-   
-   	gnc_rgbLcdBuf_t dispBuf;// = *(new gnc_rgbLcdBuf_t);
-   	
-   	void disp_update(void);
-   	//set one pixel on dispBuf
-   	void setPixel(dispSize_t r, dispSize_t c, gnc_rgb_t color) { dispBuf.pix[r][c] = color; }
-   	//print one char on dispBuf, (r,c) is Top_Left_Corner.
-   	void dispPutchar(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char ch);
-   	//write string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner.
-   	void dispPrint(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* str);
-   	//write formatted string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner.
-   	void dispPrintf(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* _fmt, ...);
-   	//write string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15.
-   	void rowPrint(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* str);
-   	//write formatted string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15.
-   	void rowPrintf(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, gnc_rgb_t b_color, const char* _fmt, ...);
-   
-   	//print one char on dispBuf, (r,c) is Top_Left_Corner. OverLay.
-   	void dispPutchar(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, const char ch);
-   	//write string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner. OverLay.
-   	void dispPrint(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, const char* str);
-   	//write formatted string on dispBuf, '\n' & auto linefeed Enabled. (r,c) is Top_Left_Corner. OverLay.
-   	void dispPrintf(dispSize_t r, dispSize_t c, gnc_rgb_t f_color, const char* _fmt, ...);
-   	//write string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15. OverLay.
-   	void rowPrint(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, const char* str);
-   	//write formatted string on dispBuf, '\n' & auto linefeed Disabled. row should in range of 0~15. OverLay.
-   	void rowPrintf(dispSize_t row, dispSize_t c, gnc_rgb_t f_color, const char* _fmt, ...);
-   
-   	void dispFillRectangle(dispSize_t r1, dispSize_t r2, dispSize_t c1, dispSize_t c2, gnc_rgb_t b_color);
-   	void dispDrawRectangle(dispSize_t r1, dispSize_t r2, dispSize_t c1, dispSize_t c2, dispSize_t thick, gnc_rgb_t b_color);
-   
-   
-   
-   
-   private:
-   	appui_disp_t(void) {}
-   	appui_disp_t(const appui_disp_t&);
-   	appui_disp_t& operator = (const appui_disp_t&);
-   
-   };
-   ```
-
-   
-
-5. 菜单逻辑接口（APPUI_MENU）
+   不提供C语言实现。
 
    C++实现：
 
@@ -1873,19 +1837,9 @@ DISP_UpdateBuffer
 
    
 
-6. 日志与命令行接口（APPUI_DLOG）
+2. 日志与命令行接口（DLOG、SHELL）
 
-   直接对接boost日志
-
-   C++实现：
-
-   ```c++
-   
-   ```
-
-   
-
-7. 图像显示接口（APPUI_IMGE）
+   不提供C语言实现。
 
    C++实现：
 
@@ -1895,7 +1849,7 @@ DISP_UpdateBuffer
 
    
 
-8. 通用数传接口（APPCOM）
+3. 通用数传接口（APPCOM）
 
    C++实现：
 
